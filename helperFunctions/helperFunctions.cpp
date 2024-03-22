@@ -43,7 +43,7 @@ void helperFunctions::initDataArray(){
         data = new double**[width];
         for (int i = 0; i < width; ++i) {
                 data[i] = new double*[height];
-                        for (int j = 0; j < height; ++j) {
+                for (int j = 0; j < height; ++j) {
                         data[i][j] = new double[3];
                 }
         }

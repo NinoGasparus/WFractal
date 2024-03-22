@@ -25,11 +25,8 @@ int main(){
     helperFunctions::displayUI();
     helperFunctions::initVars();
     helperFunctions::initDataArray();
-    
-
-    printf("bingus\n");
     startThreads();
-printf("bingus");
+
 
     sf::RenderWindow window(sf::VideoMode(1920, 1080), "WFractal");
 
@@ -38,21 +35,18 @@ printf("bingus");
 
 	sf::Uint8* data2 = new sf::Uint8[1080 * 1920 * 4];
 		
-    for (int i = 0; i < 1080; i += 1) {
-        for ( int j = 0; j < 1920; j += 1) {
-            int index = i * 1920 * 4 + j * 4;
-            int id = i * 1920 + j;
+    for (int i = 0; i < width; i += 1) {
+        for ( int j = 0; j < height; j += 1) {
+            int index = j * 1920 * 4 + i * 4;
+            
 
             int delta = 0;
-            if(data[i][j][0] == maxIteration){
-                delta = 0;
-            }else{
-                delta  = (int)helperFunctions::mapValue(data[i][j][0],0,maxIteration,0,255);
-            }
+            
+            delta = (int)helperFunctions::mapValue(data[i][j][0],0,maxIteration,0,255);
 
-            data2[index] = sf::Uint8(delta);
-            data2[index+1] = sf::Uint8(255);
-            data2[index+2] = sf::Uint8(255);
+            data2[index]   = sf::Uint8(delta);
+            data2[index+1] = sf::Uint8(delta);
+            data2[index+2] = sf::Uint8(delta);
             data2[index+3] = sf::Uint8(255);
         }
     }
