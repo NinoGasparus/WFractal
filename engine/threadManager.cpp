@@ -37,5 +37,30 @@ void startThreads(){
 
         }
     }
-    
+}
+
+void reDraw(){
+    startThreads();
+
+    for (int i = 0; i < width; i += 1) {
+        for ( int j = 0; j < height; j += 1) {
+			//Navigation through the array with step of 4 on both i and j.
+            int index = (j * 4) * width + (i * 4);
+            
+
+            int delta = 0;
+            
+            delta = (int)helperFunctions::mapValue(data[i][j][0],0,maxIteration,0,255);
+
+            pictureData[index]   = delta;
+            pictureData[index+1] = delta;
+            pictureData[index+2] = delta;
+            pictureData[index+3] = 255;
+        }
+    }
+	
+	picture.update(pictureData);
+	sprite.setTexture(picture,true);
+
+    printf("Window Redrawn\n");
 }

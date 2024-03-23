@@ -1,8 +1,11 @@
 #include "helperFunctions.h"
 #include "../globalVars.h"
+#include <SFML/Graphics.hpp>
 
 #include <iostream>
 #include <stdio.h>
+#include <fstream>
+#include <string>
 
 double helperFunctions::mapValue(double X, double X_min, double X_max, double Y_min, double Y_max){
         return ((X - X_min) / (X_max - X_min)) * (Y_max - Y_min) + Y_min;
@@ -35,8 +38,20 @@ void helperFunctions::initVars(){
         py = (4.5);
 
         z =3;
-        maxIteration = 1000;
+        iterat  = 10;
+        maxIteration = iterat*iterat;        
+        
+        somethingChanged = false;
 
+        pictureData = new sf::Uint8[1080 * 1920 * 4];
+        picture.create(1920, 1080);
+        sprite.setTexture(picture,true);
+
+
+
+    std::ifstream file("shaders/blueBernstein.frag");
+    std::string fragmentShaderCode((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    shader.loadFromMemory(fragmentShaderCode, sf::Shader::Fragment);
 }
 
 void helperFunctions::initDataArray(){
