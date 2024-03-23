@@ -36,22 +36,24 @@ void helperFunctions::initVars(){
         ny = (-4.5);
         px = (8);
         py = (4.5);
-
+        realLine = 540; //hardcoded since default will do 
         z =3;
         iterat  = 10;
         maxIteration = iterat*iterat;        
-        
-        somethingChanged = false;
 
+        somethingChanged = false;
+        formula = 1;
         pictureData = new sf::Uint8[1080 * 1920 * 4];
         picture.create(1920, 1080);
         sprite.setTexture(picture,true);
+        
 
 
+        std::ifstream file("shaders/blueBernstein.frag");
+        std::string fragmentShaderCode((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        shader.loadFromMemory(fragmentShaderCode, sf::Shader::Fragment);
 
-    std::ifstream file("shaders/blueBernstein.frag");
-    std::string fragmentShaderCode((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    shader.loadFromMemory(fragmentShaderCode, sf::Shader::Fragment);
+        stopThreads = false;
 }
 
 void helperFunctions::initDataArray(){

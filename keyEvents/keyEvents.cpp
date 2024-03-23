@@ -6,27 +6,29 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+
+int stepFactor = 10;
 void keyEvents::W(){
     somethingChanged = true;
     double deltaY = (ny / z) - (py / z);
-    yoff += deltaY / 5;
+    yoff += deltaY / stepFactor;
     printf("W\n");
 }
 void keyEvents::A(){
     somethingChanged = true;
     double deltaX = (nx / z) - (px / z);
-    xoff += deltaX / 5;
+    xoff += deltaX / stepFactor;
     printf("A\n");
 }
 void keyEvents::S(){
     double deltaY = (ny / z) - (py / z);
-    yoff -= deltaY / 5;
+    yoff -= deltaY / stepFactor;
     somethingChanged = true;
     printf("S\n");
 }
 void keyEvents::D(){
     double deltaX = (nx / z) - (px / z);
-    xoff -= deltaX / 5;
+    xoff -= deltaX / stepFactor;
     somethingChanged = true;
 printf("D\n");
 }
@@ -52,6 +54,7 @@ void keyEvents::Num0(){
     maxIteration =1000;
     xoff = 0;
 	yoff = 0;
+    
 	z = 3;
     somethingChanged = true;
     printf("0\n");
@@ -63,6 +66,17 @@ void keyEvents::Space(){
 
 void keyEvents::Shift(sf::Event ev){
     somethingChanged = true;
+    switch(ev.key.code){
+        case sf::Keyboard::Num1:
+            formula = 1;
+            break;
+        case sf::Keyboard::Num2:
+            formula = 2;
+            break;
+        case sf::Keyboard::Num3:
+            formula = 3;
+            break;
+    }
     std::cout << ev.key.code <<std::endl;
 }
 void keyEvents::Ctrl(sf::Event ev) {
