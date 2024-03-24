@@ -12,10 +12,13 @@ class keyEvents {
 
        static void F();
 
-       static void Num0();
+        static  void Num0();
+    static void Space();
+    static void Shift(sf::Event ev);
+    static void Ctrl(sf::Event ev);
 
-       static void Space();
-       static void Shift(sf::Event ev);
-       static void Ctrl(sf::Event ev);
-
+    static void Up();
+    static void Down();
+    static void Left();
+    static void Right();
 };

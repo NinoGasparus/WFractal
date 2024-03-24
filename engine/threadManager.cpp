@@ -5,7 +5,7 @@
 #include <mutex>
 #include <queue>
 #include <chrono>
-
+#include <cstring>
 
 void startThreads(int threadCount,int numSegments){
     //numSegments is idealy 8 (while 9 is faster it creates more overhead with non perfectlly sized chunks)
@@ -17,7 +17,9 @@ void startThreads(int threadCount,int numSegments){
     
     //Create threads
     for (int i = 0; i < threadCount; ++i) {  
-        threads.emplace_back(threadWorker, 0, 0, 0, 0);
+			
+        threads.emplace_back(threadWorker, 0, 0, 0, 0, i);
+        
     }   
 }
 
@@ -63,6 +65,19 @@ void reDraw(int numSegments){
     dx = std::abs(xo1-xo);
     dy = std::abs(yo1-yo);
 
+
+    //reset all pixeldata
+    for(int i =0; i < width; i++){
+        for(int j =0; j < height; j++){
+            data[i][j][0] = -9999;
+            data[i][j][1] = -9999;
+            data[i][j][2] = -9999;
+            data[i][j][3] = -9999;
+
+        }
+    }
+
+
     if(simViable && true){
         
         realLine = (int)helperFunctions::mapValue(0,img1, img2, 0, height);
@@ -81,9 +96,11 @@ void reDraw(int numSegments){
                     //if end of current segment is lesser than realLine that means it can be completeley mirrored
                     if((j+1) * segmentHeight <= realLine){
                         segmentQueue.push(std::make_tuple(startx, starty, endx, endy, true, true,1,conversionTreshold, dx, dy));
-                    }else if(j*segmentHeight < realLine){
+                    }
+                    /*}else if(j*segmentHeight < realLine){
                         segmentQueue.push(std::make_tuple(startx,startx,endx, realLine, true, true, 1, conversionTreshold, dx, dy));
-                    }else{
+                    }*/
+                    else{
                         segmentQueue.push(std::make_tuple(startx, starty, endx, endy, false, true,1,conversionTreshold, dx, dy));
                     }
                 }
@@ -121,6 +138,7 @@ void reDraw(int numSegments){
 
 
     //Wake threads- Start computation
+    completeThreads = 0;
     queueCondition.notify_all();
 }
 

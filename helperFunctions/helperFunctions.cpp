@@ -40,14 +40,17 @@ void helperFunctions::initVars(){
         z =3;
         iterat  = 10;
         maxIteration = iterat*iterat;        
-
+        maxRecursion = 4;
+        curFrame =0;
+        completeThreads= 0;
         somethingChanged = false;
         formula = 1;
         pictureData = new sf::Uint8[1080 * 1920 * 4];
         picture.create(1920, 1080);
         sprite.setTexture(picture,true);
-        
-
+        splitIndex = 90;
+        splitfactor = 0.97;
+        curFrame = 0;
 
         std::ifstream file("shaders/blueBernstein.frag");
         std::string fragmentShaderCode((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -61,7 +64,7 @@ void helperFunctions::initDataArray(){
         for (int i = 0; i < width; ++i) {
                 data[i] = new double*[height];
                 for (int j = 0; j < height; ++j) {
-                        data[i][j] = new double[3];
+                        data[i][j] = new double[4];
                 }
         }
 }

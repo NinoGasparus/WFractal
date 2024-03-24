@@ -36,22 +36,45 @@ void keyEvents::F(){
     somethingChanged = true;
 printf("F\n");
 }
+
+void keyEvents::Left(){
+    splitfactor -= 0.05;
+    if(splitfactor -0.05 <=0){
+        printf("split min\n");
+        splitfactor = 0;
+    }
+    splitIndex = (int)maxIteration*splitfactor;
+    somethingChanged = true;
+}
+void keyEvents::Right(){
+
+    splitfactor +=0.05;
+    if(splitfactor +0.05>=1){
+        printf("split MAx\n");
+        splitfactor= 0.99;
+    }
+    splitIndex = (int)maxIteration*splitfactor;
+    somethingChanged = true;
+}
+
 void keyEvents::J(){
     iterat++;
     maxIteration=std::pow(iterat,1/0.8);
-    
+    splitIndex = (int)maxIteration*splitfactor;
     somethingChanged = true;
+    //resume = true;
     printf("J\n");
 }
 void keyEvents::K(){
     iterat--;
     maxIteration=std::pow(iterat,1/0.8);
-    
+    splitIndex = (int)maxIteration*splitfactor;
     somethingChanged = true;
     printf("K\n");
 }
 void keyEvents::Num0(){
     maxIteration =1000;
+    splitIndex = maxIteration * splitfactor;
     xoff = 0;
 	yoff = 0;
     
@@ -59,6 +82,9 @@ void keyEvents::Num0(){
     somethingChanged = true;
     printf("0\n");
 }
+
+
+
 void keyEvents::Space(){
     somethingChanged = true;
     printf("space\n");
@@ -108,3 +134,13 @@ void keyEvents::Ctrl(sf::Event ev) {
 }
 
 
+void keyEvents::Up(){
+    maxRecursion++;
+    std::cout <<maxRecursion <<std::endl;
+    somethingChanged = true;
+}
+void keyEvents::Down(){
+    maxRecursion--;
+    std::cout <<maxRecursion << std::endl;
+    somethingChanged = true;
+}

@@ -29,13 +29,18 @@ int      res;
 double *** data;
 int 	realLine;
 bool 	top;
+long curFrame;
+bool resume;
+int completeThreads;
 bool 	 somethingChanged;
 sf::Uint8* pictureData;
 sf::Texture picture;
 sf::Sprite sprite;
 sf::Shader shader;
-
+int maxRecursion;
+int splitIndex;
 int formula;
+float splitfactor;
 bool stopThreads;
 std::vector<std::thread> threads; 
 std::queue<std::tuple<int, int, int, int, bool,bool, int, double, double , double>> segmentQueue;
@@ -48,7 +53,8 @@ int main(){
     helperFunctions::initDataArray();
 
 	//first parameter is number of  threads, second is amount of splits horizontally and veritcally, 8 is ideal.
-	startThreads(8,8);
+	int tcf = 8;
+	startThreads(tcf,8);
 	//called once to compute the first frame. 
 	reDraw(8);
 
@@ -60,17 +66,30 @@ int main(){
 	
 	auto prevFrameTime = std::chrono::high_resolution_clock::now();
 	auto curFrameTime = std::chrono::high_resolution_clock::now();
+	
+	
 	while (window.isOpen())
 	{
-		curFrameTime = std::chrono::high_resolution_clock::now();
-		std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(curFrameTime-prevFrameTime).count() << std::endl;
-		prevFrameTime = std::chrono::high_resolution_clock::now();
+		
+		if(completeThreads == tcf){
+			curFrame++;
+			//std::cout<<curFrame <<  std::endl;
+			std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-curFrameTime).count() << std::endl;
+			completeThreads = 0;
+			//resume = false;
+
+		}else{
+			// curFrameTime = std::chrono::high_resolution_clock::now();
+			// std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(curFrameTime-prevFrameTime).count() << std::endl;
+			// prevFrameTime = std::chrono::high_resolution_clock::now();
+		}
+		
 		sf::Event event;
 		//if image was not completeley done last frame it gets the new data
 		fetchData();
 		while (window.pollEvent(event))
 		{	
-					
+			
 			switch(event.type){
 				case sf::Event::Closed:
 					killThreads();
@@ -104,6 +123,20 @@ int main(){
 							killThreads();
 							window.close();
 							break;
+
+						case sf::Keyboard::Up:
+							keyEvents::Up();
+							break;
+						case sf::Keyboard::Down:
+							keyEvents::Down();
+							break;
+						case sf::Keyboard::Left:
+							keyEvents::Left();
+							break;
+						case sf::Keyboard::Right:
+							keyEvents::Right();
+							break;
+
 						case sf::Keyboard::Num1:
 						case sf::Keyboard::Num2:
 						case sf::Keyboard::Num3:
@@ -129,14 +162,13 @@ int main(){
 				
 				case sf::Event::MouseWheelScrolled:	
 						if (event.mouseWheelScroll.delta > 0){
-						z++;
+						z+=sqrt(z);
 						somethingChanged = true;
 						}
 						else if (event.mouseWheelScroll.delta < 0){
-						z--;
+						z-=sqrt(z);;
 						somethingChanged = true;
 						}
-						std::cout << z << std::endl;
 					break;
 
     		}
@@ -149,7 +181,8 @@ int main(){
 				data[i][j][1] = 0;
 				data[i][j][2] = 0;
 			}
-		}
+		}	
+			curFrameTime = std::chrono::high_resolution_clock::now();
 			reDraw(8);
 			somethingChanged = false;
 		}
