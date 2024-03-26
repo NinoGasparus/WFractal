@@ -95,13 +95,13 @@ void reDraw(int numSegments){
 
                     //if end of current segment is lesser than realLine that means it can be completeley mirrored
                     if((j+1) * segmentHeight <= realLine){
-                        segmentQueue.push(std::make_tuple(startx, starty, endx, endy, true, true,1,conversionTreshold, dx, dy));
+                        segmentQueue.push(std::make_tuple(startx, starty, endx, endy, false, false,1,conversionTreshold, dx, dy));
                     }
                     /*}else if(j*segmentHeight < realLine){
                         segmentQueue.push(std::make_tuple(startx,startx,endx, realLine, true, true, 1, conversionTreshold, dx, dy));
                     }*/
                     else{
-                        segmentQueue.push(std::make_tuple(startx, starty, endx, endy, false, true,1,conversionTreshold, dx, dy));
+                        segmentQueue.push(std::make_tuple(startx, starty, endx, endy, false, false,1,conversionTreshold, dx, dy));
                     }
                 }
             }
@@ -113,7 +113,7 @@ void reDraw(int numSegments){
                     int endx = (i + 1) * segmentWidth;
                     int endy = (j + 1) * segmentHeight;
                     if(j*segmentHeight >= realLine){
-                       segmentQueue.push(std::make_tuple(startx, starty, endx, endy, true,false, 1,conversionTreshold, dx, dy));
+                       segmentQueue.push(std::make_tuple(startx, starty, endx, endy, false,false, 1,conversionTreshold, dx, dy));
                     }else{
                        segmentQueue.push(std::make_tuple(startx, starty, endx, endy, false,false,1,conversionTreshold, dx, dy));
                     }
@@ -143,20 +143,21 @@ void reDraw(int numSegments){
 }
 
 void fetchData(){
-  
+    auto start = std::chrono::high_resolution_clock::now();
     std::unique_lock<std::mutex> lock(queueMutex);
    
-	
-
+	int delta = 0;
+int index;
     for (int i = 0; i < width; i += 1) {
         for ( int j = 0; j < height; j += 1) {
-			//Navigation through the array with step of 4 on both i and j.
-            int index = (j * 4) * width + (i * 4);
             
+        	//Navigation through the array with step of 4 on both i and j.
+             index = (j * 4) * width + (i * 4);
+             delta = (int)helperFunctions::mapValue(data[i][j][0],0, maxIteration,0, 255);
 
-            int delta = 0;
+            
             // OPTIMIZE WITH AVX 
-            delta = (int)helperFunctions::mapValue(data[i][j][0],0,maxIteration,0,255);
+         
            
             pictureData[index]   = delta;
             pictureData[index+1] = delta;
@@ -168,5 +169,7 @@ void fetchData(){
     
 	picture.update(pictureData);
 	sprite.setTexture(picture,true);
-
+    auto end = std::chrono::high_resolution_clock::now();
+if(somethingChanged)
+    std::cout << "took: " << std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() << "ms\n";
 }

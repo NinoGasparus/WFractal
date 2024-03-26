@@ -13,6 +13,8 @@
 #include <condition_variable> 
 #include <mutex> 
 #include <chrono>
+#include <atomic>
+#include <string>
 
 int      width;
 int      height;
@@ -47,6 +49,32 @@ std::queue<std::tuple<int, int, int, int, bool,bool, int, double, double , doubl
 std::condition_variable queueCondition;
 std::mutex queueMutex; 
 
+
+
+
+
+void consoleThread() {
+    std::string input;
+    while (true) {
+        std::getline(std::cin, input);
+		try{
+			switch(input[0]){
+				case '+':input.erase(input.begin());z+= std::stod(input);break;
+				case '-':input.erase(input.begin());z-= std::stod(input);break;
+				case 'x':input.erase(input.begin());xoff = std::stod(input);break;
+				case 'y':input.erase(input.begin());yoff = std::stod(input);break;
+				default:
+				z = std::stod(input);
+			}
+			somethingChanged = true;
+		}catch(std::exception& e){
+			
+		}
+    }
+}
+
+
+
 int main(){
     helperFunctions::displayUI();
     helperFunctions::initVars();
@@ -67,10 +95,39 @@ int main(){
 	auto prevFrameTime = std::chrono::high_resolution_clock::now();
 	auto curFrameTime = std::chrono::high_resolution_clock::now();
 	
-	
+	sf::Vector2i prevMousePOsition = {0,0};
+
+		bool mouseDragging = false;
+		int mouseDragStartx = 0;
+		int mouseDragStarty = 0;
+
+
+//start listener
+	std::atomic<bool> runningFlag(true);
+	std::thread consoleThread2(consoleThread);
+
 	while (window.isOpen())
 	{
-		
+		if(prevMousePOsition != sf::Mouse::getPosition(window)){
+			if(mouseDragging){
+						
+						sf::Vector2i m = sf::Mouse::getPosition(window);
+
+						int deltax = m.x - mouseDragStartx;
+						int deltay = m.y - mouseDragStarty;
+
+						double panx = std::abs((nx/z)-(px/z)) /width;
+						double pany = std::abs((ny/z)-(py/z))/height;						
+
+						xoff -= deltax * panx;
+						yoff -= deltay * pany;
+
+						mouseDragStartx  = m.x;
+						mouseDragStarty  = m.y;
+						std::cout <<"mx:" << m.x << " my:" << m.y << '\n';
+						somethingChanged = true;
+					}	
+		}
 		if(completeThreads == tcf){
 			curFrame++;
 			//std::cout<<curFrame <<  std::endl;
@@ -87,6 +144,10 @@ int main(){
 		sf::Event event;
 		//if image was not completeley done last frame it gets the new data
 		fetchData();
+
+
+		
+
 		while (window.pollEvent(event))
 		{	
 			
@@ -170,8 +231,22 @@ int main(){
 						somethingChanged = true;
 						}
 					break;
+				case sf::Event::MouseButtonPressed:
+					printf("mousedown\n");
+					mouseDragging = true;
+					mouseDragStartx = sf::Mouse::getPosition(window).x;
+					mouseDragStarty = sf::Mouse::getPosition(window).y;
+					break;
+				
+				case sf::Event::MouseButtonReleased:
+					mouseDragging = false;
+					printf("mouseUp\n");
+					break;
 
-    		}
+				case sf::Event::MouseMoved:
+				break;
+					
+    		}		
         }
 		if(somethingChanged){
 		for(int i =0; i < width; i++){

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <chrono>
 #include <random>
+#include <immintrin.h>
 //double conversionTreshold
 int compute(int x, int y, double conversionTreshold) {
         if((int)x >=0 && (int)x <=width-1 && (int)y>=0 && (int)y<=height-1){
@@ -106,6 +107,131 @@ int computeFromRefOrb(int x, int y, bool center){
         }
       
 }
+void computeQuad(int x, int y, int x2, int y2, int x3, int y3, int x4, int y4){
+    __m256d const2 = _mm256_set1_pd(2.0);
+    __m256d const4 = _mm256_set1_pd(4.0);
+    __m256d constneg1 = _mm256_set1_pd(-1.0);
+    __m256d constpos1 = _mm256_set1_pd(1.0);
+
+    alignas(32) double xo[4], yo[4];
+    alignas(32) double constreals[4], constimags[4];
+    bool allZero = true;
+    __m256d reals, imags, constrealsVec, constimagsVec, a, b, d, t, t2, t3, counter;
+
+    __m256d mask;
+     alignas(32) double maskArray[4];
+    
+            allZero = true;       
+         
+                xo[0] = helperFunctions::mapValue(x, 0, width, (nx / z) + xoff, (px / z) + xoff);
+                yo[0] = helperFunctions::mapValue(y, 0, height, (ny / z) + yoff, (py / z) + yoff);
+
+                xo[1] = helperFunctions::mapValue(x2, 0, width, (nx / z) + xoff, (px / z) + xoff);
+                yo[1] = helperFunctions::mapValue(y2, 0, height, (ny / z) + yoff, (py / z) + yoff);
+
+                xo[2] = helperFunctions::mapValue(x3, 0, width, (nx / z) + xoff, (px / z) + xoff);
+                yo[2] = helperFunctions::mapValue(y3, 0, height, (ny / z) + yoff, (py / z) + yoff);
+
+                   xo[3] = helperFunctions::mapValue(x4, 0, width, (nx / z) + xoff, (px / z) + xoff);
+                yo[3] = helperFunctions::mapValue(y4, 0, height, (ny / z) + yoff, (py / z) + yoff);
+                
+                for(int i =0; i < 4; i++){
+                constreals[i] = xo[i];
+                constimags[i] = yo[i];
+                }
+            
+             reals = _mm256_load_pd(xo);
+             imags = _mm256_load_pd(yo);
+
+             constrealsVec = _mm256_load_pd(constreals);
+             constimagsVec = _mm256_load_pd(constimags);
+
+             counter = _mm256_setzero_pd();
+            //make mask 0b111111111......11111
+             mask = _mm256_castsi256_pd(_mm256_set1_epi64x(-1));
+            
+            for (int c = 0; c < maxIteration; c += 1) {
+
+
+            //_mm256_blendv_pd(reals, _mm256_setzero_pd(), mask); 
+            //IF     nth bit in mask is 0 value from first vector is chosen ELSE second is chosen
+
+                        //a = r*r
+                t = _mm256_mul_pd(reals, reals);
+                a = _mm256_blendv_pd(a,t, mask); 
+                
+                    //b=  i * i
+                t = _mm256_mul_pd(const2, _mm256_mul_pd(reals, imags));
+                b = _mm256_blendv_pd(a,t, mask); 
+
+                    //d = i * i * -1
+                t = _mm256_mul_pd(imags, _mm256_mul_pd(imags, constneg1));
+                d = _mm256_blendv_pd(d, t, mask); 
+        
+                    // r = a + d + xo
+                t = _mm256_add_pd(a, _mm256_add_pd(d, constrealsVec));
+                reals = _mm256_blendv_pd(reals,t, mask); 
+
+                    // i = b + yo
+                t = _mm256_add_pd(b, constimagsVec);
+                imags = _mm256_blendv_pd(imags, t, mask); 
+
+                        //counter ++ for elements who did not escape
+                t = _mm256_add_pd(counter, constpos1);
+                counter = _mm256_blendv_pd(counter,t, mask);
+                    //counter = _mm256_add_pd(counter,constpos1);
+                            //t = r * r + i  * i
+                t = _mm256_add_pd(_mm256_mul_pd(reals, reals), _mm256_mul_pd(imags, imags));
+
+                // t < 4
+                //first 64 bits will be 1 IF first element of t is not greather than 4, so rest can proceeed
+                mask= _mm256_cmp_pd(t, const4, _CMP_NGT_UQ);
+        
+            
+                _mm256_store_pd(maskArray, mask);
+    
+                allZero = true;
+        for (int i = 0; i < 4; ++i) {
+            if (maskArray[i] != 0) {
+                allZero = false;
+                //break;
+            }
+        }
+
+      
+
+    
+                if (allZero) {
+                break;
+                }
+            }
+
+            // c    0       mit    0    255
+            // x   xmin   xmax   ymin  ymax
+
+            // ((X - X_min) / (X_max - X_min)) * (Y_max - Y_min) + Y_min;
+            // ((c - 0)) / (mit - 0) * (255  - 0) + 0
+            // (c) / (mit) * 255
+
+
+            // t = _mm256_div_pd(counter, _mm256_set1_pd(maxIteration));
+
+            // t2 = _mm256_mul_pd(_mm256_set1_pd(maxIteration), t);
+
+            // t = _mm256_mul_pd(_mm256_set1_pd(255), t2);
+            t = counter;
+            
+            alignas(32) double iterationCounts[4];
+            _mm256_store_pd(iterationCounts, t);
+            
+
+        
+           data[x][y][0] = iterationCounts[0];
+           data[x2][y2][0] = iterationCounts[1];
+           data[x3][y3][0] = iterationCounts[2];
+           data[x4][y4][0] = iterationCounts[3];
+        }
+   
 void rect(int x, int y, int dx, int dy, int value){
     for(int i =x; i < x+dx; i++){
         for(int j = y; j < y+dy; j++){
@@ -175,16 +301,30 @@ void fragmentCompute(int localStartx, int localStarty, int localEndx, int localE
                     // int c = compute(x,y, conversionTreshold);
                 int c = computeFromRefOrb(x,y, true);
           
-                 c =  computeFromRefOrb(x+1,y, false );
-                c = computeFromRefOrb(x-1,y, false );
-                    
-                c =    computeFromRefOrb(x  ,y-1, false);           
-                c =    computeFromRefOrb(x+1,y-1, false);
-                    c =computeFromRefOrb(x-1,y-1, false);
-                    
-                   c = computeFromRefOrb(x,y+1, false);           
-                    c =computeFromRefOrb(x+1,y+1, false);
-                    c =computeFromRefOrb(x-1,y+1, false);
+                
+                
+
+                computeQuad(x  , y-1,
+                            x+1, y-1, 
+                            x-1, y-1,
+                            x-1, y);
+
+                computeQuad(x  , y+1,
+                            x+1, y+1,
+                            x-1, y+1,
+                            x+1, y
+
+                );
+                // c =computeFromRefOrb(x  ,y-1, false);           
+                // c =computeFromRefOrb(x+1,y-1, false);
+                // c =computeFromRefOrb(x-1,y-1, false);
+                // c =computeFromRefOrb(x-1,y  , false );
+
+                
+                // c =computeFromRefOrb(x  ,y+1, false);           
+                // c =computeFromRefOrb(x+1,y+1, false);
+                // c =computeFromRefOrb(x-1,y+1, false);
+                // c =computeFromRefOrb(x+1,y  , false );
 
                 // if (c == maxIteration) {
                 //     // if(simmetry && top){
