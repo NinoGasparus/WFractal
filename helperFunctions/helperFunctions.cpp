@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string>
 
+
 double helperFunctions::mapValue(double X, double X_min, double X_max, double Y_min, double Y_max){
         return ((X - X_min) / (X_max - X_min)) * (Y_max - Y_min) + Y_min;
 }
@@ -36,7 +37,7 @@ void helperFunctions::initVars(){
         ny = (-4.5);
         px = (8);
         py = (4.5);
-        realLine = 540; //hardcoded since default will do 
+        realLine = (int)height/2; //hardcoded since default will do 
         z =3;
         iterat  = 10;
         maxIteration = iterat*iterat;        
@@ -45,8 +46,8 @@ void helperFunctions::initVars(){
         completeThreads= 0;
         somethingChanged = false;
         formula = 1;
-        pictureData = new sf::Uint8[1080 * 1920 * 4];
-        picture.create(1920, 1080);
+        pictureData = new sf::Uint8[width * height * 4];
+        picture.create(width, height);
         sprite.setTexture(picture,true);
         splitIndex = 90;
         splitfactor = 0.97;

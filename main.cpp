@@ -15,6 +15,7 @@
 #include <chrono>
 #include <atomic>
 #include <string>
+#include <cstdint>
 
 int      width;
 int      height;
@@ -25,7 +26,7 @@ double   py;
 long     z;
 double   xoff;
 double   yoff;
-long     maxIteration;
+uint16_t     maxIteration;
 int 	 iterat;
 int      res;
 double *** data;
@@ -76,6 +77,7 @@ void consoleThread() {
 
 
 int main(){
+	int zoomFactor= 0;
     helperFunctions::displayUI();
     helperFunctions::initVars();
     helperFunctions::initDataArray();
@@ -86,8 +88,8 @@ int main(){
 	//called once to compute the first frame. 
 	reDraw(8);
 
-    sf::RenderWindow window(sf::VideoMode(1920, 1080), "WFractal");
-	sf::View view(sf::FloatRect(0, 0, 1920, 1080));
+    sf::RenderWindow window(sf::VideoMode(width, height), "WFractal");
+	sf::View view(sf::FloatRect(0, 0, width, height));
     window.setSize(sf::Vector2u(width,height));
     window.setFramerateLimit(60); 
 	window.setView(view);
@@ -223,11 +225,13 @@ int main(){
 				
 				case sf::Event::MouseWheelScrolled:	
 						if (event.mouseWheelScroll.delta > 0){
-						z+=sqrt(z);
+							zoomFactor++;
+						z+=zoomFactor;
 						somethingChanged = true;
 						}
 						else if (event.mouseWheelScroll.delta < 0){
-						z-=sqrt(z);;
+						z-=zoomFactor;
+						zoomFactor--;
 						somethingChanged = true;
 						}
 					break;

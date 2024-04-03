@@ -6,7 +6,7 @@
 #include <queue>
 #include <chrono>
 #include <cstring>
-
+#include <cstdint>
 void startThreads(int threadCount,int numSegments){
     //numSegments is idealy 8 (while 9 is faster it creates more overhead with non perfectlly sized chunks)
     //
@@ -56,11 +56,11 @@ void reDraw(int numSegments){
     bool simViable =  (img1 < 0 && img2 > 0) && formula == 1;
     double conversionTreshold = std::abs(nx/z-px/z)/(width+height*2);
     double dx, dy;
-    double xo = helperFunctions::mapValue(0, 0, 1920, (nx / z)+xoff, (px / z)+xoff);
-    double yo = helperFunctions::mapValue(0, 0, 1080, (ny / z)+yoff, (py / z)+yoff);
+    double xo = helperFunctions::mapValue(0, 0, width, (nx / z)+xoff, (px / z)+xoff);
+    double yo = helperFunctions::mapValue(0, 0, height, (ny / z)+yoff, (py / z)+yoff);
 
-    double xo1 = helperFunctions::mapValue(1, 0, 1920, (nx / z)+xoff, (px / z)+xoff);
-    double yo1 = helperFunctions::mapValue(1, 0, 1080, (ny / z)+yoff, (py / z)+yoff);
+    double xo1 = helperFunctions::mapValue(1, 0, width, (nx / z)+xoff, (px / z)+xoff);
+    double yo1 = helperFunctions::mapValue(1, 0, height, (ny / z)+yoff, (py / z)+yoff);
 
     dx = std::abs(xo1-xo);
     dy = std::abs(yo1-yo);
@@ -69,7 +69,7 @@ void reDraw(int numSegments){
     //reset all pixeldata
     for(int i =0; i < width; i++){
         for(int j =0; j < height; j++){
-            data[i][j][0] = -9999;
+            //data[i][j][0] = -9999;
             data[i][j][1] = -9999;
             data[i][j][2] = -9999;
             data[i][j][3] = -9999;
@@ -142,30 +142,93 @@ void reDraw(int numSegments){
     queueCondition.notify_all();
 }
 
+
+void hexaDecMap(uint16_t* data) {
+    // Constants for the calculation
+    const float ymin = 0.0f;
+    const float ymax = 255.0f;
+    const float xmin = 0.0f;
+    const float xmax = static_cast<float>(maxIteration);
+
+    // Load the constants into SIMD registers
+    __m256 y_min = _mm256_set1_ps(ymin);
+    __m256 y_max = _mm256_set1_ps(ymax);
+    __m256 x_max = _mm256_set1_ps(xmax);
+
+    // Load the input data
+    __m256i input_data = _mm256_loadu_si256((__m256i*)data);
+
+    // Convert input data to float
+    __m256 x = _mm256_cvtepi32_ps(_mm256_unpacklo_epi16(input_data, _mm256_setzero_si256()));
+    __m256 y = _mm256_cvtepi32_ps(_mm256_unpackhi_epi16(input_data, _mm256_setzero_si256()));
+
+    // Compute the mapping
+    __m256 mapped_data = _mm256_mul_ps(_mm256_div_ps(_mm256_sub_ps(x, _mm256_set1_ps(xmin)), _mm256_sub_ps(x_max, _mm256_set1_ps(xmin))),
+                                        _mm256_sub_ps(y_max, y_min));
+
+    // Convert the result back to integer
+    __m256i result_data = _mm256_cvtps_epi32(mapped_data);
+
+    // Store the result back to memory
+    _mm256_storeu_si256((__m256i*)data, result_data);
+}
+
 void fetchData(){
     auto start = std::chrono::high_resolution_clock::now();
-    std::unique_lock<std::mutex> lock(queueMutex);
+ //   std::unique_lock<std::mutex> lock(queueMutex);
    
 	int delta = 0;
 int index;
+uint16_t* values = new uint16_t[16];
     for (int i = 0; i < width; i += 1) {
         for ( int j = 0; j < height; j += 1) {
             
         	//Navigation through the array with step of 4 on both i and j.
-             index = (j * 4) * width + (i * 4);
-             delta = (int)helperFunctions::mapValue(data[i][j][0],0, maxIteration,0, 255);
+             
+             
+            // values[0] = data[i][j][0];
+            // values[1] = data[i + 1][j][0];
+            // values[2] = data[i + 2][j][0];
+            // values[3] = data[i + 3][j][0];
+            // values[4] = data[i + 4][j][0];
+            // values[5] = data[i + 5][j][0];
+            // values[6] = data[i + 6][j][0];
+            // values[7] = data[i + 7][j][0];
+            // values[8] = data[i + 8][j][0];
+            // values[9] = data[i + 9][j][0];
+            // values[10] = data[i + 10][j][0];
+            // values[11] = data[i + 11][j][0];
+            // values[12] = data[i + 12][j][0];
+            // values[13] = data[i + 13][j][0];
+            // values[14] = data[i + 14][j][0];
+            // values[15] = data[i + 15][j][0];
 
+            // hexaDecMap(values);
             
-            // OPTIMIZE WITH AVX 
-         
-           
-            pictureData[index]   = delta;
-            pictureData[index+1] = delta;
-            pictureData[index+2] = delta;
-            pictureData[index+3] = 255;
+             delta = (int)helperFunctions::mapValue(data[i][j][0],0, maxIteration,0, 255);
+             index = (j*4) * width + (i*4);    
+                   pictureData[index]   = delta;
+                   pictureData[index+1] = delta;
+                   pictureData[index+2] = delta;
+                   pictureData[index+3] = 255;
+                
+            index = (j*4) * width + (i*4);
+            // // OPTIMIZE WITH AVX 
+            // for(int tmp = 0; tmp < 16; tmp++){
+                
+
+
+            //     pictureData[index+4*tmp]   = values[tmp];
+            //     pictureData[index+1+4*tmp] = values[tmp];
+            //     pictureData[index+2+4*tmp] = values[tmp];
+            //     pictureData[index+3+4*tmp] = 255;
+                
+            // }         
+            
+
         }
     }
-    lock.unlock();
+ //   lock.unlock();
     
 	picture.update(pictureData);
 	sprite.setTexture(picture,true);

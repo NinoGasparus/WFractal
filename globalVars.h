@@ -3,6 +3,7 @@
 #include <queue> 
 #include <condition_variable> 
 #include <mutex> 
+#include <cstdint>
 
 extern int      width; //widthof image begin created
 extern int      height;//height of image begin created
@@ -14,7 +15,7 @@ extern int      realLine;
 extern long     z;
 extern double   xoff;
 extern double   yoff;
-extern long     maxIteration;
+extern uint16_t     maxIteration;
 extern int      iterat;
 extern long     curFrame;
 extern int      res;

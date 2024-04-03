@@ -5,6 +5,12 @@
 #include <chrono>
 #include <random>
 #include <immintrin.h>
+#include <mpfr.h>
+
+#include <mpfr.h>
+
+
+
 //double conversionTreshold
 int compute(int x, int y, double conversionTreshold) {
         if((int)x >=0 && (int)x <=width-1 && (int)y>=0 && (int)y<=height-1){
@@ -12,8 +18,8 @@ int compute(int x, int y, double conversionTreshold) {
                         double prevX = 0;
                         double prevY = 0;
 
-                        double xo = helperFunctions::mapValue(x, 0, 1920, (nx / z)+xoff, (px / z)+xoff);
-                        double yo = helperFunctions::mapValue(y, 0, 1080, (ny / z)+yoff, (py / z)+yoff);
+                        double xo = helperFunctions::mapValue(x, 0, width, (nx / z)+xoff, (px / z)+xoff);
+                        double yo = helperFunctions::mapValue(y, 0, height, (ny / z)+yoff, (py / z)+yoff);
                         double r = xo;
                         double i = yo;
                         int c = 0;
@@ -51,8 +57,8 @@ int compute(int x, int y, double conversionTreshold) {
 int computeFromRefOrb(int x, int y, bool center){
 
         if((int)x >=0 && (int)x <=width-1 && (int)y>=0 && (int)y<=height-1){
-                        double xo = helperFunctions::mapValue(x, 0, 1920, (nx / z)+xoff, (px / z)+xoff);
-                        double yo = helperFunctions::mapValue(y, 0, 1080, (ny / z)+yoff, (py / z)+yoff);
+                        double xo = helperFunctions::mapValue(x, 0, width, (nx / z)+xoff, (px / z)+xoff);
+                        double yo = helperFunctions::mapValue(y, 0, height, (ny / z)+yoff, (py / z)+yoff);
                         double r = xo;
                         double i = yo;
                         int c = 0;
@@ -140,13 +146,38 @@ void computeQuad(int x, int y, int x2, int y2, int x3, int y3, int x4, int y4){
                 constimags[i] = yo[i];
                 }
             
+            //  if(data[x][y][1] !=-9999){
+            //     xo[0] = data[x][y][1];
+            //     yo[0] = data[x][y][2];
+            //     }
+            
+            //  if(data[x2][y2][1] !=-9999){
+            //     xo[1] = data[x2][y2][1];
+            //     yo[1] = data[x2][y2][2];
+            //     }
+            
+            //  if(data[x3][y3][1] !=-9999){
+            //     xo[2] = data[x3][y3][1];
+            //     yo[2] = data[x3][y3][2];
+            //     }
+            
+            //  if(data[x4][y4][1] !=-9999){
+            //     xo[3] = data[x4][y4][1];
+            //     yo[3] = data[x4][y4][2];
+            //     }
+            
+
              reals = _mm256_load_pd(xo);
              imags = _mm256_load_pd(yo);
 
              constrealsVec = _mm256_load_pd(constreals);
              constimagsVec = _mm256_load_pd(constimags);
 
+            //
              counter = _mm256_setzero_pd();
+            
+           // counter = _mm256_set1_pd(splitIndex);
+            
             //make mask 0b111111111......11111
              mask = _mm256_castsi256_pd(_mm256_set1_epi64x(-1));
             
@@ -326,7 +357,7 @@ void fragmentCompute(int localStartx, int localStarty, int localEndx, int localE
                 // c =computeFromRefOrb(x-1,y+1, false);
                 // c =computeFromRefOrb(x+1,y  , false );
 
-                // if (c == maxIteration) {
+                //if (c == maxIteration) {
                 //     // if(simmetry && top){
                 //     //     data[x][(int)(realLine*2-y)][0] = 0;
                 //     // }
@@ -374,8 +405,8 @@ void threadWorker(int startx, int starty, int endx, int endy, int tid) {
         double conversionTreshold;
         double deltax, deltay;
         std::tie(localStartx, localStarty, localEndx, localEndy, simmetry, top, res, conversionTreshold, deltax, deltay) = segment;
-        double xo = helperFunctions::mapValue(localStartx, 0, 1920, (nx / z)+xoff, (px / z)+xoff);
-        double yo = helperFunctions::mapValue(localStarty, 0, 1080, (ny / z)+yoff, (py / z)+yoff);
+        double xo = helperFunctions::mapValue(localStartx, 0, width, (nx / z)+xoff, (px / z)+xoff);
+        double yo = helperFunctions::mapValue(localStarty, 0, height, (ny / z)+yoff, (py / z)+yoff);
      
         double iniy = yo;
       
